@@ -17,23 +17,24 @@ airplane는 4개의 대기 queue 중의 하나에서 대기한다. runway1에 2개의 대기 queue, 
 	1) 각 time slot의 상태를 display - 1) 각 queue의 내용, 2) 평균 이륙 대기 시간, 3) 평균 착륙 대기 시간, 4) 착륙시 잔여 평균 비행 시간, 5) no fuel 상태의 비행기 댓수
 - 입력: 난수 사용, 각 time slot에서 이륙 queue에 도달하는 비행기 댓수, 착륙 queue에 도달하는 비행기 댓수, 착륙 queue에 도달하는 비행기의 잔여 비행 가능 시간
 */
-#include "templatequeue.h"
+#include "queue.h"
 struct randomInput {
 	int timeUnit;
 	int numPlanesTakeOff;
 	int numPlanesLanding;
 	int* remainingFlyTime;
 };
-struct LandingPlane{
+struct LandingPlane {
 	int arrivalTime;
-int IDofLandingPlane;
-int remainingFlyingTime;
+	int IDofLandingPlane;
+	int remainingFlyingTime;
 };
 struct TakeoffPlane {
 	int takeoffTime;
 	int IDofTakeoffPlane;
 };
-int generateInputData(struct randomInput *);
+const int MAXWAITINGPLANES = 3;
+int generateInputData(struct randomInput*);//착륙비행기, 이륙비행기 대기 queue를 생성
 int findSmallLandingQueue(Queue<LandingPlane>* landingQueue);
 int findSmallTakeoffQueue(Queue<TakeoffPlane>* takeoffQueue);
 void main()
@@ -43,7 +44,7 @@ void main()
 	struct randomInput inputdata[1000];
 	static int landingplaneID = 1;//odd 숫자
 	static int takeoffplaneID = 0;//even 숫자
-	if (!generateInputData(inputdata)) {
+	if (!generateInputData(inputdata)) {//이착륙 대기 queue를 생성
 		cout << " exit" << endl;
 		exit;
 	}
@@ -57,15 +58,17 @@ void main()
 		int countLanding = inputdata[i].numPlanesLanding;
 		int countTakeoff = inputdata[i].numPlanesTakeOff;
 		//queue에서 pop-now 이전에 잔여 시간이 종료된 것부터 pop을 한다
-		while (countLanding) {
+		while (countLanding) {//착륙 대기 queue 처리함
 			struct LandingPlane landing;
 			landing.arrivalTime = now;
 			//now 이전에 큐에 Add되어 remainingFlyingTime이 0인 ID를 runway 서비스 처리
 			while (1) {//runway1,2에서 landing service 처리
-				int k = findLandingQueue(landingQueue);
-				if (k == 0 || k == 1) check runway1 => struct or class 사용 여부를 결정하는 것이 필요
-				else check runway2
-				landing = landingQueue[k].Pop();
+				int k = findLandingQueue(landingQueue);//착륙할 활주로를 return 값으로 받는다
+				if (k == 0) checkRunway1();
+				else (k == 1) checkRunway2();
+				else check checkRunway3();
+	
+	landing = landingQueue[k].Pop();
 			}
 			landing.IDofLandingPlane = landingplaneID++;
 			landing.remainingFlyingTime = inputdata[i].remainingFlyTime[countLanding--];
@@ -73,14 +76,14 @@ void main()
 			int j = findSmallLandingQueue(landingQueue);
 			landingQueue[j].Push(landing);
 		}
-		while (countTakeoff--) {
+		while (countTakeoff--) {//이륙 대기 queue를 처리
 			struct TakeoffPlane takeoff;
 			takeoff.takeoffTime = now;
 			while (1) {//runway1,2,3에서 takeoff service 처리
 				int k = findLandingQueue(landingQueue);
-				if (k == 0 ) check runway1 = > struct or class 사용 여부를 결정하는 것이 필요
-				else (k == 1) check runway2
-					else check runway3
+				if (k == 0) check runway1 = > struct or class 사용 여부를 결정하는 것이 필요
+				else if (k == 1) check runway2
+				else check runway3;
 		takeoff = takeoffQueue[k].Pop();
 			}
 			takeoff.IDofTakeoffPlane = takeoffplaneID++;
