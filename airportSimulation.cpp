@@ -5,7 +5,7 @@ github id:
 */
 /*
 airport에 3개의 runway1,2,3
-airplane는 4개의 대기 queue 중의 하나에서 대기한다. runway1에 2개의 대기 queue, runway2에 대하여 2개의 대기 queue - 최대 3대
+airplane는 4개의 대기 queue 중의 하나에서 대기한다. runway1에 2개의 대기 queue, runway2에 대하여 2개의 대기 queue - 각 queue는 최대 3대까지 대기 가능
 - arriving airplane는 4개의 대기 queue 중의 하나에 Add(id, 연료로 인하여 대기 가능한 시간), 평균적으로 4개의 queue의 길이는 거의 비슷하게 유지
 -  3개의 활주로 각각에 대하여 각각 takeoff queue :  3개의 takeoff queue(size는 거의 비슷하게) - 최대 3대
 - 각 runway는 각 time slot에 takeoff 또는 landing
@@ -18,31 +18,31 @@ airplane는 4개의 대기 queue 중의 하나에서 대기한다. runway1에 2개의 대기 queue, 
 - 입력: 난수 사용, 각 time slot에서 이륙 queue에 도달하는 비행기 댓수, 착륙 queue에 도달하는 비행기 댓수, 착륙 queue에 도달하는 비행기의 잔여 비행 가능 시간
 */
 #include "queue.h"
-struct randomInput {
-	int timeUnit;
-	int numPlanesTakeOff;
-	int numPlanesLanding;
-	int* remainingFlyTime;
+struct randomInput {//난수를 사용하여 생성한다
+	int timeUnit;//3, 15, 29, 47 등으로 난수로 생성 - 이것이 queue에 Add하는 시간은 아님
+	int numPlanesTakeOff;//1<<num <<6 권고함
+	int numPlanesLanding;//1<<num<< 6 권고함
+	int* remainingFlyTime;//착륙 비행기당 잔여 비행 가능한 시간 - 즉 대기 가능한 시간
 };
 struct LandingPlane {
-	int arrivalTime;
+	int arrivalTime;//timeUnit으로 설정됨
 	int IDofLandingPlane;
-	int remainingFlyingTime;
+	int remainingFlyingTime;//대기 가능한 시간
 };
 struct TakeoffPlane {
-	int takeoffTime;
+	int takeoffTime;//timeUnit으로 설정됨
 	int IDofTakeoffPlane;
 };
 struct UseRunway {
-	bool takeoff_landing;
+	bool takeoff_landing;//이착륙 구분 태그
 	int IDPlane;
-	int start;
-	int end;
+	int start;//활주로 사용 시작 시간
+	int end;//활주로 사용 종료 시간
 };
 const int MAXWAITINGPLANES = 3;
-int generateInputData(struct randomInput*);//착륙비행기, 이륙비행기 대기 queue를 생성
-int findSmallLandingQueue(Queue<LandingPlane>* landingQueue);
-int findSmallTakeoffQueue(Queue<TakeoffPlane>* takeoffQueue);
+int generateInputData(struct randomInput*);//착륙비행기, 이륙비행기 가상 객체들을 난수를 사용하여 생성
+int findSmallLandingQueue(Queue<LandingPlane>* landingQueue);//4개의 착륙 대기 queue중에서 가장 높은 priority를 찾는다
+int findSmallTakeoffQueue(Queue<TakeoffPlane>* takeoffQueue);//3개의 이륙 대기 queue중에서 가장 높은  priority(대기 시간이 가장 긴 것)를 찾는다
 void main()
 {
 	int LandingTime, TakeOffTime;
