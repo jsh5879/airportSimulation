@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <memory>
-#include "templatebag.h"
+#include "bag.h"
 
 template <class T>
 class Queue : public Bag<T>

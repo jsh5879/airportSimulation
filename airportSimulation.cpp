@@ -33,13 +33,20 @@ struct TakeoffPlane {
 	int takeoffTime;
 	int IDofTakeoffPlane;
 };
+struct UseRunway {
+	bool takeoff_landing;
+	int IDPlane;
+	int start;
+	int end;
+};
 const int MAXWAITINGPLANES = 3;
 int generateInputData(struct randomInput*);//착륙비행기, 이륙비행기 대기 queue를 생성
 int findSmallLandingQueue(Queue<LandingPlane>* landingQueue);
 int findSmallTakeoffQueue(Queue<TakeoffPlane>* takeoffQueue);
 void main()
 {
-	int landingTime, takeoffTime;
+	int LandingTime, TakeOffTime;
+	struct UseRunway useRunway1[100], useRunway2[100], useRunway3[100];
 	//generate input data by a random number
 	struct randomInput inputdata[1000];
 	static int landingplaneID = 1;//odd 숫자
@@ -48,8 +55,8 @@ void main()
 		cout << " exit" << endl;
 		exit;
 	}
-	cout << "착륙처리 시간 입력:"; cin >> landingTime;
-	cout << "이륙처리 시간 입력:"; cin >> takeoffTime;
+	cout << "착륙처리 시간 입력:"; cin >> LandingTime;
+	cout << "이륙처리 시간 입력:"; cin >> TakeOffTime;
 	Queue<LandingPlane> landingQueue[4];//odd 숫자
 	Queue<TakeoffPlane> takeoffQueue[3];//even 숫자
 
@@ -63,12 +70,21 @@ void main()
 			landing.arrivalTime = now;
 			//now 이전에 큐에 Add되어 remainingFlyingTime이 0인 ID를 runway 서비스 처리
 			while (1) {//runway1,2에서 landing service 처리
-				int k = findLandingQueue(landingQueue);//착륙할 활주로를 return 값으로 받는다
-				if (k == 0) checkRunway1();
-				else (k == 1) checkRunway2();
-				else check checkRunway3();
-	
-	landing = landingQueue[k].Pop();
+				bool runwayService;
+				do {
+					runwayService = false;
+					for (int k = 0; k < 3; k++) {
+						struct LandingPlane completeLanding;
+						completeLanding = landingQueue[k].Top();
+						if (now > completeLanding.remainingFlyingTime + completeLanding.arrivalTime) {
+							landing = landingQueue[k].Pop();
+							//사용하는 runway에 비행기 ID, 사용 시간을 기록
+							//비행기 잔여 대기 시간이 0 이하면 runway3을 사용
+							cout << landing;
+							runwayService = true;
+						}
+					}
+				} while (!runwayService);//착륙 대기 queue에 있는 plane의 잔여 시간을 보고 pop함
 			}
 			landing.IDofLandingPlane = landingplaneID++;
 			landing.remainingFlyingTime = inputdata[i].remainingFlyTime[countLanding--];
@@ -80,11 +96,20 @@ void main()
 			struct TakeoffPlane takeoff;
 			takeoff.takeoffTime = now;
 			while (1) {//runway1,2,3에서 takeoff service 처리
-				int k = findLandingQueue(landingQueue);
-				if (k == 0) check runway1 = > struct or class 사용 여부를 결정하는 것이 필요
-				else if (k == 1) check runway2
-				else check runway3;
-		takeoff = takeoffQueue[k].Pop();
+				bool runwayService;
+				do {
+					runwayService = false;
+					for (int k = 0; k < 3; k++) {
+						struct LandingPlane completeTakeoff;
+						completeTakeoff = takeoffQueue[k].Top();
+						if (now > completeTakeoff.remainingFlyingTime + completeTakeoff.arrivalTime) {
+							takeoff = takeoffQueue[k].Pop();
+							//사용하는 runway에 비행기 ID, 사용 시간을 기록
+							cout << takeoff;
+							runwayService = true;
+						}
+					}
+				} while (!runwayService);//착륙 대기 queue에 있는 plane의 잔여 시간을 보고 pop함
 			}
 			takeoff.IDofTakeoffPlane = takeoffplaneID++;
 			//이륙 대기 queue의 사이즈가 가장 적을 것을 find()
