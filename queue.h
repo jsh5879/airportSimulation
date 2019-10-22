@@ -29,7 +29,6 @@ public:
 	T& Rear();
 	void Push(T const& x);
 	T& Pop();
-
 private:
 	int front;
 	int rear;

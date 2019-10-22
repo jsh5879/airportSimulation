@@ -169,11 +169,6 @@ int main(void)
 		int countLanding = inputdata[i].numPlanesLanding;
 		int countTakeoff = inputdata[i].numPlanesTakeOff;
 		//queue에서 pop-now 이전에 잔여 시간이 종료된 것부터 pop을 한다
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < landingQueue[i].Size(); j++) {
-				if(landingQueue[i]. < 0)
-			}
-		}
 		//큐에서 착륙처리전에 연료없는 것부터 처리
 		int runwayendtime; //활주로 갱신
 		/*
@@ -192,7 +187,7 @@ int main(void)
 			while (!runwayService && (landingQueue[0].Size() + landingQueue[1].Size() + landingQueue[2].Size() + landingQueue[3].Size() > 0 ) ) {//runway1,2에서 landing service 처리
 				for (int j = 0; j < 4; j++) {
 					struct LandingPlane completeLanding;
-					completeLanding = landingQueue[j].Rear();
+					completeLanding = landingQueue[j].Front();
 					if (landingQueue[j].Size() != 0)
 					{
 						if (now > completeLanding.remainingFlyingTime + completeLanding.arrivalTime) {
@@ -246,13 +241,19 @@ int main(void)
 				runwayService = false;
 				for (int k = 0; k < 3; k++) {
 					struct TakeoffPlane completeTakeoff;
-					completeTakeoff = takeoffQueue[k].Rear();
+					completeTakeoff = takeoffQueue[k].Front();
 					//사용하는 runway에 비행기 ID, 사용 시간을 기록
 					if (takeoffQueue[k].Size() != 0)
 					{
 						int result = findRunway(useRunway1[indexRunway1], useRunway2[indexRunway2]);
-						if
 							// 이륙 처리 코드 작성
+						if (result == 3) {
+							useRunway3[indexRunway3].takeoff_landing = true;
+							useRunway3[indexRunway3].start = completeTakeoff.takeoffTime;
+							useRunway3[indexRunway3].end = completeTakeoff.takeoffTime + TakeOffTime;
+							useRunway3[indexRunway3].IDPlane = completeTakeoff.takeoffTime;
+							indexRunway3++;
+						}
 					}
 					takeoff.IDofTakeoffPlane = takeoffplaneID;
 					takeoffplaneID += 2;
