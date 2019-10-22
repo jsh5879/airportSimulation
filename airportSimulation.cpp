@@ -41,19 +41,29 @@ struct UseRunway {
 	int end;//활주로 사용 종료 시간, end= -1이면 비사용중, end = 0이면 사용중, end >1이면 사용 종료, 초기화는 모든 array element에 대하여 -1로 초기화 설정
 };
 const int MAXWAITINGPLANES = 3;
-int generateInputData(struct randomInput*);//착륙비행기, 이륙비행기 가상 객체들을 난수를 사용하여 생성
+int time = 0;
+int generateInputData(randomInput&);//착륙비행기, 이륙비행기 가상 객체들을 난수를 사용하여 생성
 int findSmallLandingQueue(Queue<LandingPlane>* landingQueue);//4개의 착륙 대기 queue중에서 가장 높은 priority를 찾는다
 int findSmallTakeoffQueue(Queue<TakeoffPlane>* takeoffQueue);//3개의 이륙 대기 queue중에서 가장 높은  priority(대기 시간이 가장 긴 것)를 찾는다
-void main()
+int findRunway(const UseRunway a, const UseRunway b);//착륙 사용 가능 활주로 찾기
+void useRunwayLanding(UseRunway& a, UseRunway& b, int k, int id, int time); // 활주로 착륙 할당
+void useRunwayTakeoff(UseRunway& a, UseRunway& b, UseRunway& c, int k, int id, int time); //활주로 이륙 할당
+
+int main(void)
 {
 	int LandingTime, TakeOffTime;//runway의 착륙 처리 시간, 이륙 처리 시간을 화면에서 입력 받는다- 60초 ~ 180초 사이에 입력 권장
-	struct UseRunway useRunway1[100], useRunway2[100], useRunway3[100];//각 활주로의 사용 내역 - [100]은 100건 이착륙 발생을 말함
+	struct UseRunway useRunway1[1000], useRunway2[1000], useRunway3[1000];//각 활주로의 사용 내역 - [1000]은 1000건 이착륙 발생을 말함
 	//generate input data by a random number
 	static int indexRunway1 = 0, indexRunway2 = 0, indexRunway3 = 0;//각 활주로의 사용 내역에 대한 next 추가할 위치
 	struct randomInput inputdata[1000];//난수를 사용하여 데이터 생성
 	static int landingplaneID = 1;//odd 숫자
 	static int takeoffplaneID = 0;//even 숫자
-	generateInputData(inputdata); {//이착륙 plane들의 pool을 생성
+	static int avglandingtime = 0, avglandingcount = 0;
+	static int avglandingwaiting = 0, avglandingwaitingcount = 0;
+	static int avgtakeoffwaiting = 0, avgtakeoffwaitingcount = 0;
+	static int nolandcount = 0;
+	for (int i = 0; i < 1000; i++)
+		generateInputData(inputdata[i]);//이착륙 plane들의 pool을 생성
 
 	cout << "착륙처리 시간 입력:"; cin >> LandingTime;
 	cout << "이륙처리 시간 입력:"; cin >> TakeOffTime;
@@ -66,67 +76,162 @@ void main()
 		int countLanding = inputdata[i].numPlanesLanding;
 		int countTakeoff = inputdata[i].numPlanesTakeOff;
 		//queue에서 pop-now 이전에 잔여 시간이 종료된 것부터 pop을 한다
+		//큐에서 착륙처리전에 연료없는 것부터 처리
+		int runwayendtime; //활주로 갱신
+		/*
+		활주로 사용 데이터 갱신하는 코드 작성
+		queue의 잔여 비행 시간 갱신하는 코드 작성
+		연료 부족 착륙 대기 비행기 우선 처리 코드 작성
+		*/
 		while (countLanding) {//착륙 대기 queue 처리함
 			struct LandingPlane landing;
 			landing.arrivalTime = now;
 			//now 이전에 큐에 Add되어 remainingFlyingTime <60인 ID를 runway 서비스 처리
-			while (1) {//runway1,2에서 landing service 처리
-				bool runwayService;
-				do {
-					runwayService = false;
-					for (int k = 0; k < 3; k++) {
-						struct LandingPlane completeLanding;
-						completeLanding = landingQueue[k].Top();
+			bool runwayService = false;
+			while (!runwayService && (landingQueue[0].count + landingQueue[1].count + landingQueue[2].count + landingQueue[3].count) > 0) {//runway1,2에서 landing service 처리
+				for (int j = 0; j < 4; j++) {
+					struct LandingPlane completeLanding;
+					completeLanding = landingQueue[j].Top();
+					if (landingQueue[j].count != 0)
+					{
 						if (now > completeLanding.remainingFlyingTime + completeLanding.arrivalTime) {
 
 							//사용하는 runway에 비행기 ID, 사용 시간을 기록
 							//landing에 사용이 가능한 활주로를 구한다
-							k = findRunway();
+							int k = findRunway(useRunway1[indexRunway1], useRunway2[indexRunway2]);
 							//비행기 잔여 대기 시간이 60 이하면 runway3을 사용
-							landing = landingQueue[k].Pop();
-							useRunway(k);//k-th runWay를 사용 처리
-							cout << landing;
-							runwayService = true;
+							//코드 작성
+						}
 						}
 					}
-				} while (!runwayService);//착륙 대기 queue에 있는 plane의 잔여 시간을 보고 pop함
+					runwayService = true;
+					//착륙 대기 queue에 있는 plane의 잔여 시간을 보고 pop함
+				}
+				landing.IDofLandingPlane = landingplaneID;
+				landingplaneID += 2;
+				landing.remainingFlyingTime = inputdata[i].remainingFlyTime[--countLanding];
+				//착륙 대기 queue의 사이즈가 가장 적을 것을 find()
+				int j = findSmallLandingQueue(landingQueue);
+				landingQueue[j].Push(landing);
 			}
-			landing.IDofLandingPlane = landingplaneID++;
-			landing.remainingFlyingTime = inputdata[i].remainingFlyTime[countLanding--];
-			//착륙 대기 queue의 사이즈가 가장 적을 것을 find()
-			int j = findSmallLandingQueue(landingQueue);
-			landingQueue[j].Push(landing);
-		}
 		while (countTakeoff--) {//이륙 대기 queue를 처리
 			struct TakeoffPlane takeoff;
 			takeoff.takeoffTime = now;
-			while (1) {//runway3에서 takeoff service 처리하고 runway1,2가 비사용 중이면 이륙에 사용
-				bool runwayService;//활주로 3에 대한 처리임
-				result = checkRunwayOneTwo();
-				if (result == 0 || result == 1)//result가 0, 1이면 runway0 , runway1이 이륙용으로 사용
-				{
-					runway1,2가 비어 있고 이륙이 사용 가능한 경우에 이륙 처리한다.
-				}
-				do {
-					runwayService = false;
-					for (int k = 0; k < 3; k++) {
-						struct LandingPlane completeTakeoff;
-						completeTakeoff = takeoffQueue[k].Top();
-						if (now > completeTakeoff.remainingFlyingTime + completeTakeoff.arrivalTime) {
-							takeoff = takeoffQueue[k].Pop();
-							//사용하는 runway에 비행기 ID, 사용 시간을 기록
-							cout << takeoff;
-							runwayService = true;
-						}
+			//runway3에서 takeoff service 처리하고 runway1,2가 비사용 중이면 이륙에 사용
+			bool runwayService = false;
+			//활주로 3에 대한 처리임
+			while (!runwayService && (takeoffQueue[0].count + takeoffQueue[1].count + takeoffQueue[2].count) > 0) {
+				runwayService = false;
+				for (int k = 0; k < 3; k++) {
+					struct TakeoffPlane completeTakeoff;
+					completeTakeoff = takeoffQueue[k].Top();
+					//사용하는 runway에 비행기 ID, 사용 시간을 기록
+					if (takeoffQueue[k].count != 0)
+					{
+						int result = findRunway(useRunway1[indexRunway1], useRunway2[indexRunway2]);
+						if
+							// 이륙 처리 코드 작성
 					}
-				} while (!runwayService);//착륙 대기 queue에 있는 plane의 잔여 시간을 보고 pop함
-			}
-			takeoff.IDofTakeoffPlane = takeoffplaneID++;
-			//이륙 대기 queue의 사이즈가 가장 적을 것을 find()
-			int j = findSmallTakeoffQueue(takeoffQueue);
-			takeoffQueue[j].Push(takeoff);
+					takeoff.IDofTakeoffPlane = takeoffplaneID;
+					takeoffplaneID += 2;
+					//이륙 대기 queue의 사이즈가 가장 적을 것을 find()
+					int j = findSmallTakeoffQueue(takeoffQueue);
+					takeoffQueue[j].Push(takeoff);
+				}
+			}// 평균 이륙 대기 시간 = 00,  평균 착륙 대기 시간 = 00, 착륙시 잔여 평균 비행 시간 = 00, no fuel 상태의 비행기 댓수 == 00을 display
+			cout << "시간대 = " << now << "\t" << "평균 이륙 대기 시간 = " << avgtakeoffwaiting / avgtakeoffwaitingcount << "\t" << "평균 착륙 대기 시간 = " << avglandingwaiting / avglandingwaitingcount;
+			cout << "\t" << "착륙시 잔여 평균 비행 시간 = " << avglandingtime / avglandingcount << "\t";
+			cout << "착륙못한 비행기 수 = " << nolandcount << "\n";
 		}
-	}// 평균 이륙 대기 시간 = 00,  평균 착륙 대기 시간 = 00, 착륙시 잔여 평균 비행 시간 = 00, no fuel 상태의 비행기 댓수 == 00을 display
+		system("pause");
+		return 0;
+	}
 
-	system("pause");
-}
+	void generateInputData(randomInput & a)//착륙비행기, 이륙비행기 가상 객체들을 난수를 사용하여 생성
+	{
+		a.timeUnit = time;
+		time += rand() % 240 + 120;
+		a.numPlanesLanding = rand() % 4 + 1;
+		a.numPlanesTakeOff = rand() % 4 + 1;
+		a.remainingFlyTime = new int[a.numPlanesLanding];
+		for (int i = 0; i < a.numPlanesLanding; i++)
+			a.remainingFlyTime[i] = rand() % 320 + 360;
+	}
+	int findRunway(const UseRunway a, const UseRunway b) //사용 가능 활주로 찾기
+	{
+		if (a.end != 0)
+			return 1;
+		else if (b.end != 0)
+			return 2;
+		else
+			return 3;
+	}
+	void useRunwayLanding(UseRunway & a, UseRunway & b, int k, int id, int time) // 활주로 착륙 할당
+	{
+		if (k == 1)
+		{
+			a.IDPlane = id;
+			a.start = time;
+			a.end = 0;
+			a.takeoff_landing = 1;
+		}
+		if (k == 2)
+		{
+			b.IDPlane = id;
+			b.start = time;
+			b.end = 0;
+			b.takeoff_landing = 1;
+		}
+	}
+	void useRunwayTakeoff(UseRunway & a, UseRunway & b, UseRunway & c, int k, int id, int time) //활주로 이륙 할당
+	{
+		if (k == 1)
+		{
+			a.IDPlane = id;
+			a.start = time;
+			a.end = 0;
+			a.takeoff_landing = 0;
+		}
+		if (k == 2)
+		{
+			b.IDPlane = id;
+			b.start = time;
+			b.end = 0;
+			b.takeoff_landing = 0;
+		}
+		if (k == 3)
+		{
+			c.IDPlane = id;
+			c.start = time;
+			c.end = 0;
+			c.takeoff_landing = 0;
+		}
+	}
+	int findSmallLandingQueue(const Queue<LandingPlane> * landingQueue)//4개의 착륙 대기 queue중에서 가장 높은 priority를 찾는다
+	{
+		int min = landingQueue[0].count;
+		for (int i = 0; i < 4; i++)
+		{
+			if (min > landingQueue[i].count)
+				min = landingQueue[i].count;
+		}
+		for (int i = 0; i < 4; i++)
+		{
+			if (landingQueue[i].count == min)
+				return i;
+		}
+	}
+	int findSmallTakeoffQueue(const Queue<TakeoffPlane> * takeoffQueue)//3개의 이륙 대기 queue중에서 가장 높은  priority(대기 시간이 가장 긴 것)를 찾는다
+	{
+		int min = takeoffQueue[0].count;
+		for (int i = 0; i < 3; i++)
+		{
+			if (min > takeoffQueue[i].count)
+				min = takeoffQueue[i].count;
+		}
+		for (int i = 0; i < 3; i++)
+		{
+			if (takeoffQueue[i].count == min)
+				return i;
+		}
+	}

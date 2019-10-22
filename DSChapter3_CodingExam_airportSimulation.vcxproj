@@ -102,9 +102,7 @@
     <ClCompile Include="airportSimulation.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bag.h" />
     <ClInclude Include="queue.h" />
-    <ClInclude Include="stack.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
