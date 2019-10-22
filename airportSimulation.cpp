@@ -50,6 +50,98 @@ void useRunwayLanding(UseRunway& a, UseRunway& b, int k, int id, int time); // È
 void useRunwayTakeoff(UseRunway& a, UseRunway& b, UseRunway& c, int k, int id, int time); //È°ÁÖ·Î ÀÌ·ú ÇÒ´ç
 
 
+	//Âø·úºñÇà±â, ÀÌ·úºñÇà±â °¡»ó °´Ã¼µéÀ» ³­¼ö¸¦ »ç¿ëÇÏ¿© »ý¼º
+void generateInputData(randomInput& a)
+{
+	a.timeUnit = time;
+	time += rand() % 240 + 120;
+	a.numPlanesLanding = rand() % 4 + 1;
+	a.numPlanesTakeOff = rand() % 4 + 1;
+	a.remainingFlyTime = new int[a.numPlanesLanding];
+	for (int i = 0; i < a.numPlanesLanding; i++)
+		a.remainingFlyTime[i] = rand() % 320 + 360;
+}
+
+int findRunway(const UseRunway a, const UseRunway b) //»ç¿ë °¡´É È°ÁÖ·Î Ã£±â
+{
+	if (a.end != 0)
+		return 1;
+	else if (b.end != 0)
+		return 2;
+	else
+		return 3;
+}
+
+void useRunwayLanding(UseRunway& a, UseRunway& b, int k, int id, int time) // È°ÁÖ·Î Âø·ú ÇÒ´ç
+{
+	if (k == 1)
+	{
+		a.IDPlane = id;
+		a.start = time;
+		a.end = 0;
+		a.takeoff_landing = 1;
+	}
+	if (k == 2)
+	{
+		b.IDPlane = id;
+		b.start = time;
+		b.end = 0;
+		b.takeoff_landing = 1;
+	}
+}
+void useRunwayTakeoff(UseRunway& a, UseRunway& b, UseRunway& c, int k, int id, int time) //È°ÁÖ·Î ÀÌ·ú ÇÒ´ç
+{
+	if (k == 1)
+	{
+		a.IDPlane = id;
+		a.start = time;
+		a.end = 0;
+		a.takeoff_landing = 0;
+	}
+	if (k == 2)
+	{
+		b.IDPlane = id;
+		b.start = time;
+		b.end = 0;
+		b.takeoff_landing = 0;
+	}
+	if (k == 3)
+	{
+		c.IDPlane = id;
+		c.start = time;
+		c.end = 0;
+		c.takeoff_landing = 0;
+	}
+}
+int findSmallLandingQueue(const Queue<LandingPlane>* landingQueue)//4°³ÀÇ Âø·ú ´ë±â queueÁß¿¡¼­ °¡Àå ³ôÀº priority¸¦ Ã£´Â´Ù
+{
+	int min = landingQueue[0].Size();
+	for (int i = 0; i < 4; i++)
+	{
+		if (min > landingQueue[i].Size())
+			min = landingQueue[i].Size();
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		if (landingQueue[i].Size() == min)
+			return i;
+	}
+}
+int findSmallTakeoffQueue(const Queue<TakeoffPlane>* takeoffQueue)//3°³ÀÇ ÀÌ·ú ´ë±â queueÁß¿¡¼­ °¡Àå ³ôÀº  priority(´ë±â ½Ã°£ÀÌ °¡Àå ±ä °Í)¸¦ Ã£´Â´Ù
+{
+	int min = takeoffQueue[0].Size();
+	for (int i = 0; i < 3; i++)
+	{
+		if (min > takeoffQueue[i].Size())
+			min = takeoffQueue[i].Size();
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		if (takeoffQueue[i].Size() == min)
+			return i;
+	}
+}
+
 int main(void)
 {
 	int LandingTime, TakeOffTime;//runwayÀÇ Âø·ú Ã³¸® ½Ã°£, ÀÌ·ú Ã³¸® ½Ã°£À» È­¸é¿¡¼­ ÀÔ·Â ¹Þ´Â´Ù- 60ÃÊ ~ 180ÃÊ »çÀÌ¿¡ ÀÔ·Â ±ÇÀå
@@ -100,7 +192,7 @@ int main(void)
 			while (!runwayService && (landingQueue[0].Size() + landingQueue[1].Size() + landingQueue[2].Size() + landingQueue[3].Size() > 0 ) ) {//runway1,2¿¡¼­ landing service Ã³¸®
 				for (int j = 0; j < 4; j++) {
 					struct LandingPlane completeLanding;
-					completeLanding = landingQueue[j].Top();
+					completeLanding = landingQueue[j].Rear();
 					if (landingQueue[j].Size() != 0)
 					{
 						if (now > completeLanding.remainingFlyingTime + completeLanding.arrivalTime) {
@@ -150,13 +242,13 @@ int main(void)
 			//runway3¿¡¼­ takeoff service Ã³¸®ÇÏ°í runway1,2°¡ ºñ»ç¿ë ÁßÀÌ¸é ÀÌ·ú¿¡ »ç¿ë
 			bool runwayService = false;
 			//È°ÁÖ·Î 3¿¡ ´ëÇÑ Ã³¸®ÀÓ
-			while (!runwayService && (takeoffQueue[0].count + takeoffQueue[1].count + takeoffQueue[2].count) > 0) {
+			while (!runwayService && (takeoffQueue[0].Size() + takeoffQueue[1].Size() + takeoffQueue[2].Size()) > 0) {
 				runwayService = false;
 				for (int k = 0; k < 3; k++) {
 					struct TakeoffPlane completeTakeoff;
-					completeTakeoff = takeoffQueue[k].Top();
+					completeTakeoff = takeoffQueue[k].Rear();
 					//»ç¿ëÇÏ´Â runway¿¡ ºñÇà±â ID, »ç¿ë ½Ã°£À» ±â·Ï
-					if (takeoffQueue[k].count != 0)
+					if (takeoffQueue[k].Size() != 0)
 					{
 						int result = findRunway(useRunway1[indexRunway1], useRunway2[indexRunway2]);
 						if
@@ -175,94 +267,4 @@ int main(void)
 		}
 		system("pause");
 		return 0;
-	}
-
-	//Âø·úºñÇà±â, ÀÌ·úºñÇà±â °¡»ó °´Ã¼µéÀ» ³­¼ö¸¦ »ç¿ëÇÏ¿© »ý¼º
-	void generateInputData(randomInput& a){
-		a.timeUnit = time;
-		time += rand() % 240 + 120;
-		a.numPlanesLanding = rand() % 4 + 1;
-		a.numPlanesTakeOff = rand() % 4 + 1;
-		a.remainingFlyTime = new int[a.numPlanesLanding];
-		for (int i = 0; i < a.numPlanesLanding; i++)
-			a.remainingFlyTime[i] = rand() % 320 + 360;
-	}
-
-	int findRunway(const UseRunway a, const UseRunway b) //»ç¿ë °¡´É È°ÁÖ·Î Ã£±â
-	{
-		if (a.end != 0)
-			return 1;
-		else if (b.end != 0)
-			return 2;
-		else
-			return 3;
-	}
-	void useRunwayLanding(UseRunway & a, UseRunway & b, int k, int id, int time) // È°ÁÖ·Î Âø·ú ÇÒ´ç
-	{
-		if (k == 1)
-		{
-			a.IDPlane = id;
-			a.start = time;
-			a.end = 0;
-			a.takeoff_landing = 1;
-		}
-		if (k == 2)
-		{
-			b.IDPlane = id;
-			b.start = time;
-			b.end = 0;
-			b.takeoff_landing = 1;
-		}
-	}
-	void useRunwayTakeoff(UseRunway & a, UseRunway & b, UseRunway & c, int k, int id, int time) //È°ÁÖ·Î ÀÌ·ú ÇÒ´ç
-	{
-		if (k == 1)
-		{
-			a.IDPlane = id;
-			a.start = time;
-			a.end = 0;
-			a.takeoff_landing = 0;
-		}
-		if (k == 2)
-		{
-			b.IDPlane = id;
-			b.start = time;
-			b.end = 0;
-			b.takeoff_landing = 0;
-		}
-		if (k == 3)
-		{
-			c.IDPlane = id;
-			c.start = time;
-			c.end = 0;
-			c.takeoff_landing = 0;
-		}
-	}
-	int findSmallLandingQueue(const Queue<LandingPlane> * landingQueue)//4°³ÀÇ Âø·ú ´ë±â queueÁß¿¡¼­ °¡Àå ³ôÀº priority¸¦ Ã£´Â´Ù
-	{
-		int min = landingQueue[0].count;
-		for (int i = 0; i < 4; i++)
-		{
-			if (min > landingQueue[i].count)
-				min = landingQueue[i].count;
-		}
-		for (int i = 0; i < 4; i++)
-		{
-			if (landingQueue[i].count == min)
-				return i;
-		}
-	}
-	int findSmallTakeoffQueue(const Queue<TakeoffPlane> * takeoffQueue)//3°³ÀÇ ÀÌ·ú ´ë±â queueÁß¿¡¼­ °¡Àå ³ôÀº  priority(´ë±â ½Ã°£ÀÌ °¡Àå ±ä °Í)¸¦ Ã£´Â´Ù
-	{
-		int min = takeoffQueue[0].count;
-		for (int i = 0; i < 3; i++)
-		{
-			if (min > takeoffQueue[i].count)
-				min = takeoffQueue[i].count;
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			if (takeoffQueue[i].count == min)
-				return i;
-		}
 	}

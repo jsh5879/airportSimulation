@@ -10,7 +10,7 @@ public:
 	Bag(int bagCapacity = 10);
 	~Bag();
 	bool IsFull();
-	virtual int Size() const;
+	int Size() const;
 	bool IsEmpty() const;
 	virtual T& Pop();
 	virtual void Push(const T&);
@@ -27,14 +27,12 @@ public:
 	bool IsEmpty();
 	T& Front();
 	T& Rear();
-	void Push(T const& x, int time);
+	void Push(T const& x);
 	T& Pop();
-	int Size() const;
-	T& Top();
+
 private:
 	int front;
 	int rear;
-	int time;
 };
 
 template <class T>
@@ -131,7 +129,7 @@ inline T& Queue<T>::Rear()
 
 // doubling queue capacity
 template <class T>
-void Queue<T>::Push(T const& x, int _time)
+void Queue<T>::Push(T const& x)
 {
 	if ((rear + 1) % capacity == front)
 	{
@@ -155,7 +153,7 @@ void Queue<T>::Push(T const& x, int _time)
 		delete[] queue;
 		queue = newQueue;
 	}
-	time = _time;
+
 	rear = (rear + 1) % capacity;
 	queue[rear] = x;
 }
@@ -168,24 +166,4 @@ T & Queue<T>::Pop()
 	retValue = array[front];
 	front = (front + 1) % capacity;
 	return retValue;
-}
-
-template<class T>
-inline int Queue<T>::Size() const
-{
-	return rear - front;
-}
-
-template<class T>
-inline T& Queue<T>::Top()
-{
-	int min = queue[(front + 1 % capacity].time;
-	int minIndex = (front + 1) % capacity;
-	for (int i = 0; i < size(); i++) {
-		if (queue[(front + 1 + i) % capacity].time < min) {
-			min = queue[(front + 1 + i) % capacity].time;
-			minIndex = (front + 1 + i) % capacity;
-		}
-	}
-	return queue[minIndex];
 }
