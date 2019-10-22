@@ -1,7 +1,7 @@
 /* airportSimulation.cpp - to simulate an airport landing and takeoff pattern
-학번:
-이름:
-github id:
+학번: 201524561
+이름: 장석환
+github id: jsh5879
 */
 /*
 airport에 3개의 runway1,2,3
@@ -42,12 +42,13 @@ struct UseRunway {
 };
 const int MAXWAITINGPLANES = 3;
 int time = 0;
-int generateInputData(randomInput&);//착륙비행기, 이륙비행기 가상 객체들을 난수를 사용하여 생성
+void generateInputData(randomInput&);//착륙비행기, 이륙비행기 가상 객체들을 난수를 사용하여 생성
 int findSmallLandingQueue(Queue<LandingPlane>* landingQueue);//4개의 착륙 대기 queue중에서 가장 높은 priority를 찾는다
 int findSmallTakeoffQueue(Queue<TakeoffPlane>* takeoffQueue);//3개의 이륙 대기 queue중에서 가장 높은  priority(대기 시간이 가장 긴 것)를 찾는다
 int findRunway(const UseRunway a, const UseRunway b);//착륙 사용 가능 활주로 찾기
 void useRunwayLanding(UseRunway& a, UseRunway& b, int k, int id, int time); // 활주로 착륙 할당
 void useRunwayTakeoff(UseRunway& a, UseRunway& b, UseRunway& c, int k, int id, int time); //활주로 이륙 할당
+
 
 int main(void)
 {
@@ -76,6 +77,11 @@ int main(void)
 		int countLanding = inputdata[i].numPlanesLanding;
 		int countTakeoff = inputdata[i].numPlanesTakeOff;
 		//queue에서 pop-now 이전에 잔여 시간이 종료된 것부터 pop을 한다
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < landingQueue[i].Size(); j++) {
+				if(landingQueue[i]. < 0)
+			}
+		}
 		//큐에서 착륙처리전에 연료없는 것부터 처리
 		int runwayendtime; //활주로 갱신
 		/*
@@ -83,16 +89,19 @@ int main(void)
 		queue의 잔여 비행 시간 갱신하는 코드 작성
 		연료 부족 착륙 대기 비행기 우선 처리 코드 작성
 		*/
+
+
+
 		while (countLanding) {//착륙 대기 queue 처리함
 			struct LandingPlane landing;
 			landing.arrivalTime = now;
 			//now 이전에 큐에 Add되어 remainingFlyingTime <60인 ID를 runway 서비스 처리
 			bool runwayService = false;
-			while (!runwayService && (landingQueue[0].count + landingQueue[1].count + landingQueue[2].count + landingQueue[3].count) > 0) {//runway1,2에서 landing service 처리
+			while (!runwayService && (landingQueue[0].Size() + landingQueue[1].Size() + landingQueue[2].Size() + landingQueue[3].Size() > 0 ) ) {//runway1,2에서 landing service 처리
 				for (int j = 0; j < 4; j++) {
 					struct LandingPlane completeLanding;
 					completeLanding = landingQueue[j].Top();
-					if (landingQueue[j].count != 0)
+					if (landingQueue[j].Size() != 0)
 					{
 						if (now > completeLanding.remainingFlyingTime + completeLanding.arrivalTime) {
 
@@ -101,6 +110,27 @@ int main(void)
 							int k = findRunway(useRunway1[indexRunway1], useRunway2[indexRunway2]);
 							//비행기 잔여 대기 시간이 60 이하면 runway3을 사용
 							//코드 작성
+							if (k == 1) {
+								useRunway1[indexRunway1].takeoff_landing = false;
+								useRunway1[indexRunway1].start = completeLanding.arrivalTime;
+								useRunway1[indexRunway1].end = completeLanding.arrivalTime + LandingTime;
+								useRunway1[indexRunway1].IDPlane = completeLanding.IDofLandingPlane;
+								indexRunway1++;
+							}
+							else if (k == 2) {
+								useRunway2[indexRunway2].takeoff_landing = false;
+								useRunway2[indexRunway2].start = completeLanding.arrivalTime;
+								useRunway2[indexRunway2].end = completeLanding.arrivalTime + LandingTime;
+								useRunway2[indexRunway2].IDPlane = completeLanding.IDofLandingPlane;
+								indexRunway2++;
+							}
+							else if ((k == 3) && (completeLanding.remainingFlyingTime <= 60)) {
+								useRunway3[indexRunway3].takeoff_landing = false;
+								useRunway3[indexRunway3].start = completeLanding.arrivalTime;
+								useRunway3[indexRunway3].end = completeLanding.arrivalTime + LandingTime;
+								useRunway3[indexRunway3].IDPlane = completeLanding.IDofLandingPlane;
+								indexRunway3++;
+							}
 						}
 						}
 					}
@@ -147,8 +177,8 @@ int main(void)
 		return 0;
 	}
 
-	void generateInputData(randomInput & a)//착륙비행기, 이륙비행기 가상 객체들을 난수를 사용하여 생성
-	{
+	//착륙비행기, 이륙비행기 가상 객체들을 난수를 사용하여 생성
+	void generateInputData(randomInput& a){
 		a.timeUnit = time;
 		time += rand() % 240 + 120;
 		a.numPlanesLanding = rand() % 4 + 1;
@@ -157,6 +187,7 @@ int main(void)
 		for (int i = 0; i < a.numPlanesLanding; i++)
 			a.remainingFlyTime[i] = rand() % 320 + 360;
 	}
+
 	int findRunway(const UseRunway a, const UseRunway b) //사용 가능 활주로 찾기
 	{
 		if (a.end != 0)
